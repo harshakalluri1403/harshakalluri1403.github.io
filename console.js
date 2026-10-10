@@ -15,8 +15,17 @@
   var BASE_HASH = hashOf(base);                 // to notice when content.js on disk changed under a draft
   var S = null;
   try { S = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { S = null; }
+  var pushedHash = null;
+  try { pushedHash = localStorage.getItem(KEY + '-pushed'); } catch (e) {}
+  // A draft identical to the published file is not a draft any more.
+  if (S && hashOf(S) === BASE_HASH) {
+    S = null;
+    try { localStorage.removeItem(KEY); localStorage.removeItem(KEY + '-base'); localStorage.removeItem(KEY + '-pushed'); } catch (e) {}
+  }
   var dirty = !!S;
-  var staleDraft = dirty && localStorage.getItem(KEY + '-base') !== BASE_HASH;
+  // Just published, but GitHub Pages is still serving the previous content.js.
+  var propagating = dirty && !!pushedHash && hashOf(S) === pushedHash;
+  var staleDraft = dirty && !propagating && localStorage.getItem(KEY + '-base') !== BASE_HASH;
   if (!S) S = JSON.parse(JSON.stringify(base));
 
   var $ = function (id) { return document.getElementById(id); };
@@ -445,7 +454,7 @@
         });
       }, Promise.resolve([]));
     }).then(function (made) {
-      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+      try { localStorage.setItem(KEY, JSON.stringify(S)); localStorage.setItem(KEY + '-pushed', hashOf(S)); } catch (e) {}
       status('Updated. The live site changes within about a minute.' + (made.length ? ' New page folders: ' + made.join(', ') + '.' : ''));
     }).catch(function (e) { status('Update failed: ' + e.message, true); })
       .then(function () { btn.disabled = false; });
@@ -517,7 +526,10 @@
     r.readAsText(file);
   };
 
-  if (dirty) {
+  if (propagating) {
+    $('status').textContent = 'Your last update is published. GitHub is still refreshing the site, which can take a few minutes; showing what you published.';
+    $('status').className = 'status';
+  } else if (dirty) {
     $('status').textContent = staleDraft
       ? 'Resumed an older draft, but content.js on disk has changed since it was saved. Click Discard draft to load the file, or keep editing the draft.'
       : 'Resumed a draft saved in this browser. Discard it to go back to content.js on disk.';
