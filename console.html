@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+  /* The console is a local editor for content.js. It never goes live:
+     visitors never see it unless they type /console.html, and it only
+     shows them the same content.js they could read anyway. */
+  body { padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  main { max-width: none; margin: 0; flex: 1; display: grid; grid-template-columns: 200px minmax(360px, 1fr) minmax(380px, 46%); min-height: 0; }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--rule); font-size: 14px; flex-wrap: wrap; }
+  .bar b { font-size: 15px; margin-right: 8px; }
+  .bar .status { color: var(--muted); margin-right: auto; }
+  .livesw { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; margin-right: 10px; }
+  .livesw input { display: none; }
+  .livesw .track { width: 36px; height: 20px; border-radius: 10px; background: #cbd5e1; position: relative; transition: background .15s; }
+  .livesw .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+  .livesw input:checked + .track { background: #16a34a; }
+  .livesw input:checked + .track::after { left: 18px; }
+  .livesw .lbl { color: var(--muted); }
+  .livesw input:checked ~ .lbl { color: #16a34a; font-weight: 600; }
+  .bar .status.dirty { color: #b45309; }
+  button, .btn { font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--pill); color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--link); color: #fff; border-color: var(--link); }
+  button.danger { color: #b91c1c; }
+  button.small { font-size: 12px; padding: 2px 8px; }
+  nav { border-right: 1px solid var(--rule); overflow-y: auto; padding: 12px 0; font-size: 14px; }
+  nav a { display: block; padding: 6px 16px; color: var(--text); }
+  nav a.on { background: var(--pill); font-weight: 600; }
+  nav a.hiddensec { color: var(--muted); }
+  nav .group { padding: 12px 16px 4px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  nav select { width: calc(100% - 32px); margin: 6px 16px; font: inherit; font-size: 13px; }
+  #form { overflow-y: auto; padding: 18px 22px 60px; }
+  #form h2 { margin-top: 0; }
+  .hint { font-size: 13px; color: var(--muted); margin: -8px 0 16px; }
+  .f { display: block; margin: 0 0 12px; }
+  .f .l { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .f input[type=text], .f textarea, .f select { width: 100%; font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 5px; background: var(--bg); color: var(--text); }
+  .f textarea { min-height: 70px; resize: vertical; }
+  .f.check { display: flex; align-items: center; gap: 8px; }
+  .f.check .l { margin: 0; }
+  .f .preview { margin-top: 6px; max-height: 90px; max-width: 160px; border-radius: 4px; border: 1px solid var(--rule); display: none; }
+  .f .upload { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .f input[type=password] { width: 100%; font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 5px; background: var(--bg); color: var(--text); }
+  fieldset { border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px 2px; margin: 0 0 14px; }
+  legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
+  details.entry { border: 1px solid var(--rule); border-radius: 6px; margin-bottom: 8px; background: var(--bg); }
+  details.entry > summary { padding: 7px 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; list-style: none; }
+  details.entry > summary::-webkit-details-marker { display: none; }
+  details.entry > summary .t { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  details.entry > summary .t:empty::before { content: "(untitled)"; color: var(--muted); }
+  details.entry > summary .n { color: var(--muted); font-size: 12px; min-width: 18px; }
+  details.entry > summary .sw { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); cursor: pointer; margin-right: 4px; white-space: nowrap; }
+  details.entry.off > summary .t { color: var(--muted); text-decoration: line-through; }
+  details.entry > .body { padding: 10px 12px 2px; border-top: 1px solid var(--rule); }
+  .flash { outline: 2px solid #f09228; outline-offset: 3px; border-radius: 4px; }
+  .flash input, .flash textarea, .flash select { border-color: #f09228 !important; }
+  .listhead { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+  .listhead .l { font-size: 12px; color: var(--muted); flex: 1; }
+  .secbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  #preview { border-left: 1px solid var(--rule); display: flex; flex-direction: column; min-height: 0; }
+  #preview .ph { padding: 6px 12px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--rule); display: flex; gap: 10px; align-items: center; }
+  #preview .ph a { margin-left: auto; }
+  #preview iframe { flex: 1; border: 0; width: 100%; background: #fff; }
+  @media (max-width: 900px) {
+    body { height: auto; overflow: auto; }
+    main { grid-template-columns: 1fr; }
+    nav { border-right: 0; border-bottom: 1px solid var(--rule); }
+    #preview { border-left: 0; border-top: 1px solid var(--rule); height: 70vh; }
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>Console</b>
+  <label class="livesw" title="On: the full portfolio is public. Off: visitors see only the holding line."><input type="checkbox" id="livesw"><span class="track"></span><span class="lbl">Portfolio live</span></label>
+  <span class="status" id="status">Loaded content.js</span>
+  <label class="btn" for="importfile" title="Load a content.js you edited by hand">Import content.js<input id="importfile" type="file" accept=".js" style="display:none"></label>
+  <button id="copy" title="Copy the new content.js to the clipboard">Copy</button>
+  <button id="discard" class="danger" title="Throw away the draft and go back to the content.js on disk">Discard draft</button>
+  <button id="download" title="Download content.js to replace the file by hand">Download content.js</button>
+  <button id="update" class="primary" title="Publish content.js to GitHub. The live site changes within a minute.">Update site</button>
+</div>
+<main>
+  <nav id="nav"></nav>
+  <div id="form"></div>
+  <div id="preview">
+    <div class="ph">Live preview <span class="muted">(reloads as you type)</span> <a href="index.html?preview=1&draft=1" target="_blank">open in a tab</a></div>
+    <iframe id="frame" src="index.html?preview=1&draft=1"></iframe>
+  </div>
+</main>
+<script src="content.js"></script>
+<script src="console.js"></script>
+</body>
+</html>

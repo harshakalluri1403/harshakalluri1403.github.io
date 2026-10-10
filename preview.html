@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Preview</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<!-- Shows the full portfolio even while it is switched off. Opening this page once
+     unlocks the preview in this browser; visitors who never open it see the holding line. -->
+<script>
+  try { localStorage.setItem('portfolio-preview', '1'); } catch (e) {}
+  location.replace('index.html?preview=1');
+</script>
+</head>
+<body>
+<p><a href="index.html?preview=1">Open the preview</a></p>
+</body>
+</html>

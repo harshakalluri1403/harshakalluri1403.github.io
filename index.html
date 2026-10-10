@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pavan Sri Harsha Kalluri</title>
+<meta name="description" content="Pavan Sri Harsha Kalluri. Machine learning, Hyderabad.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#111111">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<main>
+  <div id="notice" class="notice" style="display:none"></div>
+
+  <header class="head">
+    <div class="text">
+      <h1 id="name"></h1>
+      <div id="bio"></div>
+      <div class="links" id="links"></div>
+    </div>
+    <div class="photo" id="photobox"><img id="photo" alt="" onerror="document.getElementById('photobox').style.display='none'"></div>
+  </header>
+
+  <section id="timeline-section">
+    <h2>Timeline</h2>
+    <div class="tl" id="timeline"></div>
+  </section>
+
+  <div id="sections"></div>
+
+  <footer id="footer"></footer>
+</main>
+
+<script src="content.js"></script>
+<script>
+  // Reads window.SITE from content.js and builds the page.
+  // You should never need to touch this file; edit content.js instead.
+  (function () {
+    var S = window.SITE || {};
+    var DRAFT = /[?&]draft=1/.test(location.search);          // console.html's unsaved draft
+    // The preview only works in a browser that has opened console.html or preview.html,
+    // so a stranger typing ?preview=1 on the live site still sees the holding line.
+    var PREVIEW = /[?&]preview=1/.test(location.search);
+    try { if (PREVIEW && !DRAFT && localStorage.getItem('portfolio-preview') !== '1') PREVIEW = false; } catch (e) { PREVIEW = false; }
+    if (DRAFT) { try { var d = localStorage.getItem('portfolio-draft'); if (d) S = JSON.parse(d); } catch (e) {} }
+    var QS = PREVIEW || DRAFT ? '?' + [PREVIEW ? 'preview=1' : '', DRAFT ? 'draft=1' : ''].filter(Boolean).join('&') : '';
+    var LIVE = S.live !== false;
+
+    function el(tag, cls, html) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (html != null) e.innerHTML = html;
+      return e;
+    }
+    function fillLinks(box, list) {
+      (list || []).forEach(function (l, i) {
+        if (i) box.appendChild(el('span', 'muted', ' / '));
+        var a = el('a', null, l.label);
+        a.href = l.url;
+        box.appendChild(a);
+      });
+    }
+    // Header links: text separated by " / " like the reference page.
+    function headerLinks(box, list) {
+      (list || []).forEach(function (l, i) {
+        if (i) box.appendChild(el('span', 'sep', '/'));
+        var a = el('a', null, l.label); a.href = l.url; box.appendChild(a);
+      });
+    }
+    // Put the site owner's name in bold inside an author list, as the reference does.
+    function boldSelf(text) {
+      if (!S.name || !text) return text || '';
+      return text.split(S.name).join('<strong>' + S.name + '</strong>');
+    }
+    // Where an item's title should go: its own page if it has one, else its url.
+    function hrefFor(it) {
+      if (it.slug && it.page) return it.slug + '/' + QS;
+      return it.url || '';
+    }
+
+    // Every piece of text carries data-path, the address of its field in content.js,
+    // so a double-click in the console's preview can jump to that field.
+    function tag(node, path) { if (node && path) node.setAttribute('data-path', path); return node; }
+    var IN_CONSOLE = DRAFT && window.parent !== window;
+
+    if (S.name) document.title = S.name;
+    tag(document.getElementById('name'), 'name').textContent = S.name || '';
+    var bio = document.getElementById('bio');
+    var photo = document.getElementById('photo');
+
+    // Portfolio switched off and this is not the preview: name, one line, links.
+    if (!LIVE && !PREVIEW) {
+      bio.appendChild(tag(el('p', null, S.holdingLine || 'Portfolio coming soon.'), 'holdingLine'));
+      headerLinks(tag(document.getElementById('links'), 'links'), S.links);
+      photo.style.display = 'none';
+      document.getElementById('timeline-section').style.display = 'none';
+      return;
+    }
+    if (PREVIEW && (!LIVE || IN_CONSOLE)) {
+      var n = document.getElementById('notice');
+      n.textContent = (!LIVE ? 'Preview. Visitors see only the holding line until the portfolio is switched on. ' : '') +
+                      (IN_CONSOLE ? 'Double-click any text here to edit it in the console.' : '');
+      n.style.display = 'block';
+    }
+
+    (S.bio || []).forEach(function (p, i) { bio.appendChild(tag(el('p', null, p), 'bio.' + i)); });
+    headerLinks(tag(document.getElementById('links'), 'links'), S.links);
+    tag(document.getElementById('photobox'), 'photo');
+    if (S.photo) { photo.src = S.photo; photo.alt = S.name || ''; } else { document.getElementById('photobox').style.display = 'none'; }
+
+    // timeline
+    var tl = document.getElementById('timeline');
+    var entries = S.timeline || [];
+    if (!entries.length) document.getElementById('timeline-section').style.display = 'none';
+    entries.forEach(function (t, ti) {
+      if (t.hidden) return;
+      var base = 'timeline.' + ti;
+      var row = tag(el('div', 'row'), base);
+      var logo = tag(el('div', 'logo'), base + '.logo');
+      if (t.logo) {
+        var li = el('img'); li.src = t.logo; li.alt = t.where || '';
+        li.onerror = function () { this.style.display = 'none'; };
+        logo.appendChild(li);
+      }
+      row.appendChild(logo);
+      row.appendChild(tag(el('div', 'when', t.when || ''), base + '.when'));
+      var what = el('div', 'what');
+      var head = t.what ? '<b>' + t.what + '</b>' : '';
+      if (t.where) {
+        var where = t.url ? '<a href="' + t.url + '">' + t.where + '</a>' : t.where;
+        head += (head ? ' <span class="muted">&middot;</span> ' : '') + where;
+      }
+      what.appendChild(tag(el('div', null, head), base + '.what'));
+      if (t.note) what.appendChild(tag(el('div', 'note', t.note), base + '.note'));
+      row.appendChild(what);
+      tl.appendChild(row);
+    });
+
+    // sections
+    var secs = document.getElementById('sections');
+    (S.sections || []).forEach(function (sec, si) {
+      var items = (sec.items || []).filter(function (it) { return !it.hidden; });   // per-item toggle
+      if (sec.hidden || !items.length) return;
+      var sbase = 'sections.' + si;
+      var s = tag(el('section'), sbase);
+      s.appendChild(tag(el('h2', null, sec.title || ''), sbase + '.title'));
+      if (sec.intro) s.appendChild(tag(el('p', 'intro', sec.intro), sbase + '.intro'));
+      if (sec.type === 'lines') {           // compact: date on the left, one line on the right
+        s.classList.add('lines');
+        (sec.items || []).forEach(function (it, ii) {
+          if (it.hidden) return;
+          var lbase = sbase + '.items.' + ii;
+          var row = tag(el('div', 'line'), lbase);
+          row.appendChild(tag(el('div', 'when', it.when || it.year || ''), lbase + '.when'));
+          var h = hrefFor(it);
+          var text = h ? '<a href="' + h + '">' + (it.title || '') + '</a>' : (it.title || '');
+          if (it.description) text += ' <span class="muted">' + it.description + '</span>';
+          row.appendChild(tag(el('div', 'text', text), lbase + '.title'));
+          s.appendChild(row);
+        });
+        secs.appendChild(s);
+        return;
+      }
+      (sec.items || []).forEach(function (it, ii) {
+        if (it.hidden) return;
+        var base = sbase + '.items.' + ii;
+        var item = tag(el('div', 'item'), base);
+        var href = hrefFor(it);
+        // thumbnail: still image with the animation cross-fading in on hover, like the reference
+        var thumb = tag(el('div', 'thumb'), base + '.image');
+        if (it.image || it.gif) {
+          var one = el(href ? 'a' : 'div', 'one');
+          if (href) one.href = href;
+          var still = el('img', 'still'); still.src = it.image || it.gif; still.alt = '';
+          still.onerror = function () { one.style.visibility = 'hidden'; };
+          one.appendChild(still);
+          if (it.gif && it.gif !== it.image) { var anim = el('img', 'anim'); anim.src = it.gif; anim.alt = ''; one.appendChild(anim); }
+          thumb.appendChild(one);
+        }
+        item.appendChild(thumb);
+        var body = el('div', 'body');
+        var title = href ? '<a href="' + href + '">' + it.title + '</a>' : (it.title || '');
+        body.appendChild(tag(el('div', 'title', title), base + '.title'));
+        if (it.authors) body.appendChild(tag(el('div', 'meta', boldSelf(it.authors)), base + '.authors'));
+        var where = it.venue || it.kind || '';
+        var venue = (where ? '<em>' + where + '</em>' : '') + (it.year ? (where ? ', ' : '') + it.year : '');
+        if (venue) body.appendChild(tag(el('div', 'meta venue', venue), base + '.venue'));
+        var links = (it.links || []).slice();
+        if (it.slug && it.page) links.unshift({ label: 'project page', url: hrefFor(it) });
+        if (links.length) { var more = tag(el('div', 'more'), base + '.links'); fillLinks(more, links); body.appendChild(more); }
+        if (it.description) body.appendChild(tag(el('p', 'desc', it.description), base + '.description'));
+        item.appendChild(body);
+        s.appendChild(item);
+      });
+      secs.appendChild(s);
+    });
+
+    if (S.footer) tag(document.getElementById('footer'), 'footer').innerHTML = S.footer;
+
+    // Inverse search: double-click in the console's preview jumps to the field.
+    if (IN_CONSOLE) {
+      document.body.style.cursor = 'default';
+      document.addEventListener('dblclick', function (e) {
+        var t = e.target.closest('[data-path]');
+        if (!t) return;
+        e.preventDefault();
+        try { window.getSelection().removeAllRanges(); } catch (x) {}
+        window.parent.postMessage({ type: 'edit', path: t.getAttribute('data-path') }, '*');
+      });
+      // a single click on a link inside the preview should not leave the preview
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('a');
+        if (a && a.getAttribute('href') && !/^#/.test(a.getAttribute('href'))) { e.preventDefault(); }
+      });
+    }
+  })();
+</script>
+</body>
+</html>
