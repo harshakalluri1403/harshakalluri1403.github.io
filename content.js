@@ -256,7 +256,7 @@ window.SITE = {
           title: "Violence detection in hockey videos",
           url:   "https://github.com/harshakalluri1403/Violence-Detection",
           kind:  "Project",
-          year:  "",
+          year:  "2024",
           image: "images/violence.png",
           gif:   "images/violence.gif",
           description: "Twenty frames per clip through a frozen VGG16, then an LSTM over the sequence of feature vectors to call fight or no fight on the Hockey Fight dataset. About 96% validation accuracy.",
