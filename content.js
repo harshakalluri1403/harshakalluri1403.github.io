@@ -253,13 +253,13 @@ window.SITE = {
           links: [ { label: "Code", url: "https://github.com/harshakalluri1403/kafka-airflow-aws-lakehouse" } ]
         },
         {
-          title: "Violence detection in hockey videos",
+          title: "Real-world violence detection for CCTV and video",
           url:   "https://github.com/harshakalluri1403/Violence-Detection",
           kind:  "Project",
           year:  "2024",
           image: "images/violence.png",
           gif:   "images/violence.gif",
-          description: "Twenty frames per clip through a frozen VGG16, then an LSTM over the sequence of feature vectors to call fight or no fight on the Hockey Fight dataset. About 96% validation accuracy.",
+          description: "A fine-tuned VideoMAE video transformer that finds violence in CCTV, phone and broadcast footage and says when and where: one alarm per incident, with Grad-CAM heatmaps on the people involved. 98.2% mean accuracy across four held-out test sets, 90.8% on CCTV it never saw in training, and about 20 live camera streams on one GPU.",
           links: [ { label: "Code", url: "https://github.com/harshakalluri1403/Violence-Detection" } ]
         },
         {
